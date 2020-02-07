@@ -27,9 +27,15 @@ void pop(ST_stackInfo *info, int* data)
 
 unsigned char checkForBalancedParantheses(char* expression)
 {
+    uint8_t size=0;
     uint8_t brackets_counter=0;
     uint8_t poped_data=0;
     Loop_inc =0;
+
+    free(Stack_2.Head_pointer);
+
+    size = strlen(expression);
+    createStack(&Stack_2,size);
 
     while(expression[Loop_inc] != NULL)
     {

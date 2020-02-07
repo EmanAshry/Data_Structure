@@ -13,64 +13,114 @@ uint64_t applyOperation(uint8_t op1, uint8_t op2, uint8_t Operator_sign)
         case '/':
             return op1 / op2;
         default:
-            return op1*1;
+            return op1 + op2;
     }
 }
 
+
 long long evaluate(char* expression)
 {
-    uint8_t op_flag=1;
-    uint8_t char_value=0;
-    uint8_t temp_value=0;
-    uint64_t op1=0;
-    uint8_t op2=0;
-    uint8_t operator_sign=0;
     uint64_t result=0;
+    uint64_t temp_value=0;
+    uint8_t Operator_counter=0;
+    uint8_t Operand_counter=0;
+    uint8_t Op1=0;
+    uint8_t Op2=0;
+    uint8_t Operator_Sign=0;
+    uint8_t size=0;
+    uint8_t digit_inc=0;
+
+    free(Operands_queue.Head_pointer);
+    free(Operators_queue.Head_pointer);
+
+    size = strlen(expression);
     Loop_inc=0;
 
-    if((checkForBalancedParantheses(&expression))=='T')
-    {
-        while(expression[Loop_inc] != NULL)
+/*check the validity of the brackets  and Get the size of the 2 Queues if it's valid*/
+if((checkForBalancedParantheses(expression))=='T')
+{
+        for(int i=0;i<size;i++)
         {
-            if((expression[Loop_inc]=='+')||(expression[Loop_inc]=='-')||(expression[Loop_inc]=='*')||(expression[Loop_inc]=='/')||isdigit(expression[Loop_inc]))
+            if((expression[i]=='+')||(expression[i]=='-')||(expression[i]=='*')||(expression[i]=='/'))
             {
-                enqueue(&Queue_1,expression[Loop_inc]);
+                Operator_counter++;
             }
+            else if(isdigit(expression[i]))
+            {
+                Operand_counter++;
+            }
+        }
+
+/*reset the loop increment and Operand counter as there may be a two or more digit operand*/
+    Loop_inc=0;
+
+/*Create the Queues*/
+    createQueue(&Operands_queue,Operand_counter);
+    createQueue(&Operators_queue,Operator_counter);
+
+    Operand_counter=0;
+/*start filling the Queues and check the validity of the expression*/
+        while(Loop_inc!=size)
+        {
+                temp_value=0;
+                digit_inc = Loop_inc;
+                if(isdigit(expression[digit_inc]))
+                {
+                    while(isdigit(expression[digit_inc]))
+                    {
+                        if(expression[Loop_inc] == '\0')
+                        {
+                            break;
+                        }
+                        temp_value = (temp_value*10) + ((expression[Loop_inc]) - '0');
+                        digit_inc++;
+                    }
+                    printf("temp_value= %d\n",temp_value);
+                    Operand_counter++;
+                    enqueue(&Operands_queue,temp_value);
+                }
+
+                Loop_inc = digit_inc;
+
+            if(expression[Loop_inc] == '\0')
+            {
+                break;
+            }
+            else if((expression[Loop_inc]=='+')||(expression[Loop_inc]=='-')||(expression[Loop_inc]=='*')||(expression[Loop_inc]=='/'))
+            {
+                enqueue(&Operators_queue,expression[Loop_inc]);
+            }
+
         Loop_inc++;
         }
-    }
-    while(Queue_1.index!=0)
-    {
-        dequeue(&Queue_1,&char_value);
-        //printf("%d \n",Queue_1.index);
-        printf("%c \n",char_value);
+        printf("Operand Counter= %d\n",Operand_counter);
+        printf("Loop_Counter= %d\n",Loop_inc);
 
-        while(isdigit(char_value))
+        if((Operator_counter+1)>Operand_counter)
         {
-            temp_value = (temp_value*10) + (char_value - '0');
-            dequeue(&Queue_1,&char_value);
+            printf("Invalid Expression\n");
+            return 0;
         }
-        if(op_flag==1)
+
+        while(Operand_counter!=0)
         {
-            op1= temp_value;
-        }
-        op_flag++;
-        if(op_flag==2)
+            dequeue(&Operands_queue,&Op2);
+
+            printf("Digit=%d \n",Op2);
+
+            Op1 = applyOperation(Op1,Op2,Operator_Sign);
+            if(Operators_queue.index!=0)
             {
-                op2=temp_value;
-                result = applyOperation(op1,op2,operator_sign);
-                op1 = result;
+                dequeue(&Operators_queue,&Operator_Sign);
+                printf("Digit=%c \n",Operator_Sign);
             }
-        if((char_value=='+')||(char_value=='-')||(char_value=='*')||(char_value=='/'))
-        {
-            temp_value=0;
-            operator_sign = char_value;
+            Operand_counter--;
         }
-
-        //op2 = temp_value;
-        printf("op1=%d \n",op1);
-        printf("op2=%d \n",op2);
-    }
-
+    result = Op1;
+}
+else
+{
+    printf("Invalid brackets\n");
+}
     return result;
 }
